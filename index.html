@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VITA / Elite Movement Engineering</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --surface-glass: rgba(20, 20, 20, 0.75);
+            --surface-solid: #121212;
+            --border-muted: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(255, 255, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a8f;
+            --brand-accent: #ffffff;
+            --error-state: #ff453a;
+            --success-state: #30d158;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-stack);
+            letter-spacing: -0.02em;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* App Shell Header Navigation */
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px 6%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+        }
+
+        .brand-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .logout-trigger {
+            background: none;
+            border: 1px solid var(--border-muted);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+
+        .logout-trigger:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .app-view-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==================== VIEW 1: GATEWAY PORTAL ==================== */
+        #view-gateway-portal {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            flex-grow: 1;
+            min-height: 100vh;
+        }
+
+        .narrative-billboard {
+            position: relative;
+            padding: 120px 8% 60px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(to right, rgba(10,10,10,0.95) 40%, rgba(10,10,10,0.4)),
+                        url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+            border-right: 1px solid var(--border-muted);
+        }
+
+        .narrative-billboard h1 {
+            font-size: clamp(36px, 4.5vw, 64px);
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .narrative-billboard p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin-bottom: 48px;
+        }
+
+        .auth-portal-anchor {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 40px 40px 40px;
+            background-color: var(--bg-base);
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-muted);
+            padding: 48px 40px;
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+        }
+
+        .terminal-header {
+            margin-bottom: 28px;
+        }
+
+        .terminal-header h2 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .terminal-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Native Google SSO Connector Button Styling */
+        .google-sso-execute-btn {
+            width: 100%;
+            background: #ffffff;
+            color: #1f1f1f;
+            border: 1px solid #dcdcdc;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            transition: background 0.2s;
+        }
+
+        .google-sso-execute-btn:hover {
+            background: #f7f7f7;
+        }
+
+        .google-sso-execute-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .interface-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+
+        .interface-divider::before, .interface-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-muted);
+        }
+
+        .interface-divider:not(:empty)::before { margin-right: 16px; }
+        .interface-divider:not(:empty)::after { margin-left: 16px; }
+
+        .entry-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .entry-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .entry-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-muted);
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-radius: 4px;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+
+        .entry-field:focus {
+            border-color: var(--border-focus);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .portal-execute-btn {
+            width: 100%;
+            background: var(--brand-accent);
+            color: #000000;
+            border: none;
+            padding: 18px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .portal-execute-btn:hover { opacity: 0.9; }
+
+        .alert-shield {
+            background: rgba(255, 69, 58, 0.1);
+            border: 1px solid rgba(255, 69, 58, 0.2);
+            color: var(--error-state);
+            padding: 12px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .success-shield {
+            background: rgba(48, 209, 88, 0.1);
+            border: 1px solid rgba(48, 209, 88, 0.2);
+            color: var(--success-state);
+            padding: 12px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        /* ==================== VIEW 2: PROFESSIONAL DASHBOARD ==================== */
+        #view-dashboard-portal {
+            display: none;
+            padding: 140px 6% 60px 6%;
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .dashboard-welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-welcome-banner h2 {
+            font-size: 32px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .dashboard-welcome-banner p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .log-workout-trigger {
+            background: var(--brand-accent);
+            color: #000000;
+            border: none;
+            padding: 14px 28px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .analytics-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .analytics-card {
+            background: var(--surface-solid);
+            border: 1px solid var(--border-muted);
+            padding: 24px;
+            border-radius: 4px;
+        }
+
+        .analytics-card .card-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .analytics-card .card-value { font-size: 24px; font-weight: 600; }
+
+        .dashboard-content-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 40px;
+        }
+
+        .system-module-box {
+            background: var(--surface-solid);
+            border: 1px solid var(--border-muted);
+            border-radius: 4px;
+            padding: 32px;
+        }
+
+        .module-title-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-muted);
+            padding-bottom: 16px;
+        }
+
+        .module-title-area h3 {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .exercise-data-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .exercise-data-matrix th, .exercise-data-matrix td {
+            padding: 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-muted);
+        }
+
+        .exercise-data-matrix th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .empty-table-state {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 0 !important;
+            font-style: italic;
+        }
+
+        footer {
+            padding: 32px 6%;
+            background: #0d0d0d;
+            border-top: 1px solid var(--border-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: auto;
+        }
+
+        @media (max-width: 960px) {
+            #view-gateway-portal { grid-template-columns: 1fr; }
+            .narrative-billboard { padding: 160px 6% 80px 6%; min-height: auto; }
+            .auth-portal-anchor { padding: 60px 6%; }
+            header { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(12px); position: fixed; }
+            #view-dashboard-portal { padding-top: 120px; }
+            .dashboard-content-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-logo">VITA</div>
+        <button class="logout-trigger" id="shell-logout-action" onclick="executePlatformSignout()">Disconnect</button>
+    </header>
+
+    <div class="app-view-container">
+        
+        <main id="view-gateway-portal">
+            <section class="narrative-billboard">
+                <h1>Engineered<br>Performance.</h1>
+                <p>Access precision physical monitoring, tailored program design mechanics, and clean biometric insights inside an elite digital training layout ecosystem.</p>
+            </section>
+
+            <section class="auth-portal-anchor">
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <h2>Access Terminal</h2>
+                        <p>Authenticate with secure cloud verification models below.</p>
+                    </div>
+
+                    <div class="alert-shield" id="error-monitor-shield"></div>
+                    <div class="success-shield" id="success-monitor-shield"></div>
+
+                    <button class="google-sso-execute-btn" onclick="executeGoogleSingleSignIn()">
+                        <svg viewBox="0 0 24 24">
+                            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
+                            <path fill="#4285F4" d="M23.64 12.218c0-.782-.07-1.536-.2-2.264H12v4.51h6.53c-.28 1.492-1.12 2.756-2.38 3.6l3.7 2.871c2.164-1.996 3.41-4.931 3.41-8.717z"/>
+                            <path fill="#FBBC05" d="M5.266 14.235L1.24 17.35C3.198 21.302 7.27 24 12 24c3.055 0 5.782-1.014 7.72-2.764l-3.7-2.871c-1.055.708-2.4 1.145-4.02 1.145-3.373 0-6.227-2.282-7.244-5.365z"/>
+                            <path fill="#34A853" d="M1.24 6.65a11.934 11.934 0 0 0 0 10.7L5.266 14.23A7.06 7.06 0 0 1 4.91 12c0-.79.13-1.554.356-2.264L1.24 6.65z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <div class="interface-divider">Or Access via Email OTP</div>
+
+                    <form id="portal-auth-node" onsubmit="executeEmailOtpTransmission(event)">
+                        <div class="entry-group">
+                            <label for="identity-email">Identity Email Address</label>
+                            <input type="email" id="identity-email" class="entry-field" placeholder="name@domain.com" required>
+                        </div>
+                        <button type="submit" class="portal-execute-btn">Transmit Verification Link</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <div id="view-dashboard-portal">
+            <div class="dashboard-welcome-header">
+                <div class="dashboard-welcome-banner">
+                    <h2 id="dashboard-user-greeting">Systems Online</h2>
+                    <p>Verified biometric session active. Syncing encrypted metrics.</p>
+                </div>
+            </div>
+
+            <section class="analytics-strip">
+                <div class="analytics-card">
+                    <span class="card-label">Security Protocol Status</span>
+                    <span class="card-value" style="color: var(--success-state); font-size: 18px;">Google Encrypted</span>
+                </div>
+                <div class="analytics-card">
+                    <span class="card-label">Account Security Node</span>
+                    <span class="card-value" id="stat-user-email" style="font-size: 14px; word-break: break-all;">-</span>
+                </div>
+                <div class="analytics-card">
+                    <span class="card-label">Identity Level Index</span>
+                    <span class="card-value">Level 01</span>
+                </div>
+            </section>
+
+            <div class="dashboard-content-layout">
+                <section class="system-module-box">
+                    <div class="module-title-area">
+                        <h3>Secure Movement Registry</h3>
+                    </div>
+                    <table class="exercise-data-matrix">
+                        <thead>
+                            <tr>
+                                <th>System Operation Status</th>
+                                <th>Authentication Registry Integrity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 500;">Cloud Identity Synchronization</td>
+                                <td style="color: var(--success-state);">Verified Secure Connection</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 VITA Laboratories Inc. Human optimization engineering.</p>
+    </footer>
+
+    <script>
+        // 1. INJECT YOUR FREE FIREBASE ACCOUNT KEYS BELOW
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Native Core Client instance
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // 2. Auth State Observer Loop System
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Secure user detected -> route straight past terminal to profile dashboard
+                initializeActiveApplicationDashboard(user.displayName || user.email, user.email);
+            } else {
+                // No cached session tokens -> monitor standard incoming URL deep links for Email OTP responses
+                inspectIncomingEmailOtpDeepLinks();
+            }
+        });
+
+        // 3. Execution Pipeline A: Google SSO OAuth Redirect Engine
+        function executeGoogleSingleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+                showNotificationMessage('error', `Google Login Aborted: ${error.message}`);
+            });
+        }
+
+        // 4. Execution Pipeline B: Send Magic OTP Link Outbox Route
+        function executeEmailOtpTransmission(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById("identity-email").value.trim();
+            
+            const actionCodeSettings = {
+                url: window.location.href, // Sends them right back to this exact page to finish auth
+                handleCodeInApp: true
+            };
+
+            auth.sendSignInLinkToEmail(emailInput, actionCodeSettings)
+                .then(() => {
+                    // Commit intent state locally so we can confirm their address when they click the email link
+                    localStorage.setItem('vita_otp_intent_email', emailInput);
+                    showNotificationMessage('success', `Verification link routed! Access your inbox for ${emailInput} to finish connection.`);
+                })
+                .catch(error => {
+                    showNotificationMessage('error', `OTP Dispatch Failed: ${error.message}`);
+                });
+        }
+
+        // 5. Execution Pipeline C: Catch landing deep link tokens from user inboxes
+        function inspectIncomingEmailOtpDeepLinks() {
+            if (auth.isSignInWithEmailLink(window.location.href)) {
+                let cachedTargetEmail = localStorage.getItem('vita_otp_intent_email');
+                
+                // Security check: If device browser changed, prompt confirmation to verify address identity
+                if (!cachedTargetEmail) {
+                    cachedTargetEmail = window.prompt('Security Protocol: Confirm your target authentication email address:');
+                }
+
+                if (cachedTargetEmail) {
+                    auth.signInWithEmailLink(cachedTargetEmail, window.location.href)
+                        .then((result) => {
+                            localStorage.removeItem('vita_otp_intent_email');
+                            // Clean clean browser address query params out from current display view url
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        })
+                        .catch((error) => {
+                            showNotificationMessage('error', `Link Invalid or Expired: ${error.message}`);
+                        });
+                }
+            }
+        }
+
+        // 6. View Transformation Lifecycle Modifiers
+        function initializeActiveApplicationDashboard(displayName, emailAddress) {
+            document.getElementById("view-gateway-portal").style.display = "none";
+            document.getElementById("view-dashboard-portal").style.display = "block";
+            document.getElementById("shell-logout-action").style.display = "block";
+            
+            document.getElementById("dashboard-user-greeting").innerText = `Systems Online: ${displayName}`;
+            document.getElementById("stat-user-email").innerText = emailAddress;
+        }
+
+        function executePlatformSignout() {
+            auth.signOut().then(() => {
+                document.getElementById("view-dashboard-portal").style.display = "none";
+                document.getElementById("view-gateway-portal").style.display = "grid";
+                document.getElementById("shell-logout-action").style.display = "none";
+                document.getElementById("portal-auth-node").reset();
+                showNotificationMessage('success', "Session context severed securely.");
+            });
+        }
+
+        function showNotificationMessage(type, payloadMessage) {
+            const errShield = document.getElementById("error-monitor-shield");
+            const succShield = document.getElementById("success-monitor-shield");
+
+            errShield.style.display = "none";
+            succShield.style.display = "none";
+
+            if (type === 'error') {
+                errShield.innerText = payloadMessage;
+                errShield.style.display = "block";
+            } else {
+                succShield.innerText = payloadMessage;
+                succShield.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
