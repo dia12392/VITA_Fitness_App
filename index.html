@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VITA / Elite Movement Engineering</title>
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    
     <style>
         :root {
             --bg-base: #0a0a0a;
@@ -156,7 +153,6 @@
             color: var(--text-secondary);
         }
 
-        /* Native Google SSO Connector Button Styling */
         .google-sso-execute-btn {
             width: 100%;
             background: #ffffff;
@@ -175,14 +171,8 @@
             transition: background 0.2s;
         }
 
-        .google-sso-execute-btn:hover {
-            background: #f7f7f7;
-        }
-
-        .google-sso-execute-btn svg {
-            width: 18px;
-            height: 18px;
-        }
+        .google-sso-execute-btn:hover { background: #f7f7f7; }
+        .google-sso-execute-btn svg { width: 18px; height: 18px; }
 
         .interface-divider {
             display: flex;
@@ -200,7 +190,6 @@
             flex: 1;
             border-bottom: 1px solid var(--border-muted);
         }
-
         .interface-divider:not(:empty)::before { margin-right: 16px; }
         .interface-divider:not(:empty)::after { margin-left: 16px; }
 
@@ -251,20 +240,6 @@
             transition: opacity 0.2s ease;
         }
 
-        .portal-execute-btn:hover { opacity: 0.9; }
-
-        .alert-shield {
-            background: rgba(255, 69, 58, 0.1);
-            border: 1px solid rgba(255, 69, 58, 0.2);
-            color: var(--error-state);
-            padding: 12px 16px;
-            font-size: 13px;
-            border-radius: 4px;
-            margin-bottom: 24px;
-            display: none;
-            line-height: 1.4;
-        }
-
         .success-shield {
             background: rgba(48, 209, 88, 0.1);
             border: 1px solid rgba(48, 209, 88, 0.2);
@@ -304,20 +279,6 @@
         .dashboard-welcome-banner p {
             color: var(--text-secondary);
             font-size: 14px;
-        }
-
-        .log-workout-trigger {
-            background: var(--brand-accent);
-            color: #000000;
-            border: none;
-            padding: 14px 28px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: opacity 0.2s;
         }
 
         .analytics-strip {
@@ -394,13 +355,6 @@
             font-weight: 600;
         }
 
-        .empty-table-state {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 40px 0 !important;
-            font-style: italic;
-        }
-
         footer {
             padding: 32px 6%;
             background: #0d0d0d;
@@ -442,13 +396,12 @@
                 <div class="terminal-container">
                     <div class="terminal-header">
                         <h2>Access Terminal</h2>
-                        <p>Authenticate with secure cloud verification models below.</p>
+                        <p>Authenticate with secure sandbox simulation models below.</p>
                     </div>
 
-                    <div class="alert-shield" id="error-monitor-shield"></div>
                     <div class="success-shield" id="success-monitor-shield"></div>
 
-                    <button class="google-sso-execute-btn" onclick="executeGoogleSingleSignIn()">
+                    <button class="google-sso-execute-btn" onclick="executeMockGoogleSignIn()">
                         <svg viewBox="0 0 24 24">
                             <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
                             <path fill="#4285F4" d="M23.64 12.218c0-.782-.07-1.536-.2-2.264H12v4.51h6.53c-.28 1.492-1.12 2.756-2.38 3.6l3.7 2.871c2.164-1.996 3.41-4.931 3.41-8.717z"/>
@@ -460,7 +413,7 @@
 
                     <div class="interface-divider">Or Access via Email OTP</div>
 
-                    <form id="portal-auth-node" onsubmit="executeEmailOtpTransmission(event)">
+                    <form id="portal-auth-node" onsubmit="executeMockEmailLink(event)">
                         <div class="entry-group">
                             <label for="identity-email">Identity Email Address</label>
                             <input type="email" id="identity-email" class="entry-field" placeholder="name@domain.com" required>
@@ -482,7 +435,7 @@
             <section class="analytics-strip">
                 <div class="analytics-card">
                     <span class="card-label">Security Protocol Status</span>
-                    <span class="card-value" style="color: var(--success-state); font-size: 18px;">Google Encrypted</span>
+                    <span class="card-value" style="color: var(--success-state); font-size: 18px;">Sandbox Active</span>
                 </div>
                 <div class="analytics-card">
                     <span class="card-label">Account Security Node</span>
@@ -508,8 +461,8 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="font-weight: 500;">Cloud Identity Synchronization</td>
-                                <td style="color: var(--success-state);">Verified Secure Connection</td>
+                                <td style="font-weight: 500;">Local Sandbox Synchronization</td>
+                                <td style="color: var(--success-state);">Verified Secure Client Connection</td>
                             </tr>
                         </tbody>
                     </table>
@@ -523,84 +476,30 @@
     </footer>
 
     <script>
-        const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_ID",
-    appId: "YOUR_APP_ID"
-};
-     
-        // Initialize Native Core Client instance
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        function executeMockGoogleSignIn() {
+            // Prompt the user for their name to simulate Google parsing variables cleanly
+            const nameInput = window.prompt("Google SSO Simulation: Enter your name profile to log in:");
+            const displayName = nameInput ? nameInput.trim() : "Guest User";
+            const mockEmail = `${displayName.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
 
-        // 2. Auth State Observer Loop System
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // Secure user detected -> route straight past terminal to profile dashboard
-                initializeActiveApplicationDashboard(user.displayName || user.email, user.email);
-            } else {
-                // No cached session tokens -> monitor standard incoming URL deep links for Email OTP responses
-                inspectIncomingEmailOtpDeepLinks();
-            }
-        });
-
-        // 3. Execution Pipeline A: Google SSO OAuth Redirect Engine
-        function executeGoogleSingleSignIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                showNotificationMessage('error', `Google Login Aborted: ${error.message}`);
-            });
+            initializeActiveApplicationDashboard(displayName, mockEmail);
         }
 
-        // 4. Execution Pipeline B: Send Magic OTP Link Outbox Route
-        function executeEmailOtpTransmission(event) {
+        function executeMockEmailLink(event) {
             event.preventDefault();
             const emailInput = document.getElementById("identity-email").value.trim();
-            
-            const actionCodeSettings = {
-                url: window.location.href, // Sends them right back to this exact page to finish auth
-                handleCodeInApp: true
-            };
+            const succShield = document.getElementById("success-monitor-shield");
 
-            auth.sendSignInLinkToEmail(emailInput, actionCodeSettings)
-                .then(() => {
-                    // Commit intent state locally so we can confirm their address when they click the email link
-                    localStorage.setItem('vita_otp_intent_email', emailInput);
-                    showNotificationMessage('success', `Verification link routed! Access your inbox for ${emailInput} to finish connection.`);
-                })
-                .catch(error => {
-                    showNotificationMessage('error', `OTP Dispatch Failed: ${error.message}`);
-                });
+            succShield.innerText = `Simulated OTP Sent! A mockup verification link has been routed to ${emailInput}. Bypassing terminal now...`;
+            succShield.style.display = "block";
+
+            setTimeout(() => {
+                const autoName = emailInput.split('@')[0];
+                initializeActiveApplicationDashboard(autoName.toUpperCase(), emailInput);
+                succShield.style.display = "none";
+            }, 2500);
         }
 
-        // 5. Execution Pipeline C: Catch landing deep link tokens from user inboxes
-        function inspectIncomingEmailOtpDeepLinks() {
-            if (auth.isSignInWithEmailLink(window.location.href)) {
-                let cachedTargetEmail = localStorage.getItem('vita_otp_intent_email');
-                
-                // Security check: If device browser changed, prompt confirmation to verify address identity
-                if (!cachedTargetEmail) {
-                    cachedTargetEmail = window.prompt('Security Protocol: Confirm your target authentication email address:');
-                }
-
-                if (cachedTargetEmail) {
-                    auth.signInWithEmailLink(cachedTargetEmail, window.location.href)
-                        .then((result) => {
-                            localStorage.removeItem('vita_otp_intent_email');
-                            // Clean clean browser address query params out from current display view url
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        })
-                        .catch((error) => {
-                            showNotificationMessage('error', `Link Invalid or Expired: ${error.message}`);
-                        });
-                }
-            }
-        }
-
-        // 6. View Transformation Lifecycle Modifiers
         function initializeActiveApplicationDashboard(displayName, emailAddress) {
             document.getElementById("view-gateway-portal").style.display = "none";
             document.getElementById("view-dashboard-portal").style.display = "block";
@@ -611,29 +510,10 @@
         }
 
         function executePlatformSignout() {
-            auth.signOut().then(() => {
-                document.getElementById("view-dashboard-portal").style.display = "none";
-                document.getElementById("view-gateway-portal").style.display = "grid";
-                document.getElementById("shell-logout-action").style.display = "none";
-                document.getElementById("portal-auth-node").reset();
-                showNotificationMessage('success', "Session context severed securely.");
-            });
-        }
-
-        function showNotificationMessage(type, payloadMessage) {
-            const errShield = document.getElementById("error-monitor-shield");
-            const succShield = document.getElementById("success-monitor-shield");
-
-            errShield.style.display = "none";
-            succShield.style.display = "none";
-
-            if (type === 'error') {
-                errShield.innerText = payloadMessage;
-                errShield.style.display = "block";
-            } else {
-                succShield.innerText = payloadMessage;
-                succShield.style.display = "block";
-            }
+            document.getElementById("view-dashboard-portal").style.display = "none";
+            document.getElementById("view-gateway-portal").style.display = "grid";
+            document.getElementById("shell-logout-action").style.display = "none";
+            document.getElementById("portal-auth-node").reset();
         }
     </script>
 </body>
